@@ -53,7 +53,7 @@ void render(void) {
 
     if (state.state == GAMEOVER) {
         text_render(txt, "GAME OVER", (window.width - (8.0*8.0*9.0))/2, window.height - 350.0f, 8.0f, (vec3){1.0f, 0.0f, 0.0f});
-        text_render(txt, "PRESS SPACE TO RESTART OR ESCAPE TO EXIT", (window.width - (8.0*3.0*40.0))/2, window.height - 500.0f, 3.0f, (vec3){1.0f, 1.0f, 1.0f});
+        text_render(txt, "PRESS SPACE TO RESTART OR ESCAPE TO EXIT", (window.width - (8.0*3.0*40.0))/2, window.height - 450.0f, 3.0f, (vec3){1.0f, 1.0f, 1.0f});
     }
 
     if (state.ingame || state.state == PAUSE) {
@@ -66,7 +66,8 @@ void render(void) {
         text_render(txt, buffer, 20.0f, window.height - 60.0f, 5.0f, (vec3){1.0f, 1.0f, 1.0f});
 
         if (state.state == PAUSE) {
-            text_render(txt, "PAUSE THE GAME", (window.width - (8.0*5.0*14.0))/2, window.height - 200.0f, 8.0f, (vec3){0.2f, 0.2f, 0.7f});
+            text_render(txt, "PAUSE THE GAME", (window.width - (8.0*8.0*14.0))/2, window.height - 350.0f, 8.0f, (vec3){0.5f, 0.7f, 0.2f});
+            text_render(txt, "PRESS ESCAPE TO CONTINUE", (window.width - (8.0*3.0*24.0))/2, window.height - 450.0f, 3.0f, (vec3){1.0f, 1.0f, 1.0f});
         }
 
     }
