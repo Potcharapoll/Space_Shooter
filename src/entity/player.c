@@ -142,7 +142,7 @@ void player_init(void) {
         .x = 20.0f,
         .y = 300.0f,
         .y_vel = 0.0f,
-        .texture = texture_load(0, "../res/textures/player.png", GL_RED, GL_RGBA),
+        .texture = texture_load(0, "../res/textures/player.png", GL_RED, GL_RG),
         .shader = shader_create("../res/shaders/texture.vert", "../res/shaders/texture.frag"),
         .collider = collider_setup(player.vertices, false),
         .explosion_texture = texture_load(0, "../res/textures/explosion.png", GL_RGBA, GL_RGBA),
@@ -194,7 +194,7 @@ void player_init(void) {
 }
 
 void player_input(void) {
-    if (state.state == INGAME && state.ingame) {
+    if (state.state == INGAME) {
         if (glfwGetKey(window.window, GLFW_KEY_W) == GLFW_PRESS ) {
             player.y += 2.0f; 
         }

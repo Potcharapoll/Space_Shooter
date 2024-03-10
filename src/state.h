@@ -12,8 +12,6 @@ struct State {
         PAUSE,
         GAMEOVER
     }state;
-
-    bool ingame;
 };
 extern struct State state;
 #endif

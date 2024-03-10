@@ -56,8 +56,8 @@ static void _rock_new(void) {
 
 void rock_init(void) {
     rock = (struct EntityRock) {
-        .texture = texture_load(0, "../res/textures/rock.png", GL_RGB, GL_RGB), 
-        .shader = shader_create("../res/shaders/texture.vert", "../res/shaders/texture.frag"),
+        .texture = texture_load(0, "../res/textures/rock.png", GL_RGBA, GL_RGB), 
+        .shader = shader_create("../res/shaders/texture_rgba.vert", "../res/shaders/texture_rgba.frag"),
         .w = 48,
         .h = 46,
         .rock_head = NULL,
@@ -76,7 +76,7 @@ void rock_init(void) {
 void rock_render(void) {
     static double cooldown = 0.0f;
 
-    if (state.state == INGAME && state.ingame) {
+    if (state.state == INGAME) {
         rock.do_spawn = true;
 
         if (rock.on_cooldown) {
@@ -155,7 +155,6 @@ void rock_update(void) {
         if(collide_check(&curr->collider, &player.collider)) {
             state.state = GAMEOVER;
             player_render();
-            state.ingame = false;
             return;
         }
 
