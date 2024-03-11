@@ -36,14 +36,14 @@ void setup(void) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glm_ortho(0, window.width, 0, window.height, 0.0f, 1.0f, state.proj);
-    txt = text_load("../res/textures/font.png", 64.0f, 40.0f, 8.0f);
+    txt = text_load("../res/images/font.png", 64.0f, 40.0f, 8.0f);
 
     bg = (struct Obj) {
         .vao = vao_create(),
             .vbo = buffer_create(GL_ARRAY_BUFFER, false),
             .ibo = buffer_create(GL_ELEMENT_ARRAY_BUFFER, false),
             .shader = shader_create("../res/shaders/texture_rgba.vert", "../res/shaders/texture_rgba.frag"),
-            .texture = texture_load(0, "../res/textures/background.png", GL_RGBA, GL_RGBA)
+            .texture = texture_load(0, "../res/images/background.png", GL_RGBA, GL_RGBA)
     };
 
     float vertices[] = {

@@ -56,7 +56,7 @@ static void _rock_new(void) {
 
 void rock_init(void) {
     rock = (struct EntityRock) {
-        .texture = texture_load(0, "../res/textures/rock.png", GL_RGBA, GL_RGB), 
+        .texture = texture_load(0, "../res/images/rock.png", GL_RGB, GL_RGB), 
         .shader = shader_create("../res/shaders/texture_rgba.vert", "../res/shaders/texture_rgba.frag"),
         .w = 48,
         .h = 46,

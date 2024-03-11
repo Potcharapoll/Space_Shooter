@@ -64,7 +64,7 @@ void shader_bind(struct Shader self) {
     glUseProgram(self.handle);
 }
 
-void shader_unbind() {
+void shader_unbind(void) {
     glUseProgram(0);
 }
 

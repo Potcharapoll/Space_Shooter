@@ -142,10 +142,10 @@ void player_init(void) {
         .x = 20.0f,
         .y = 300.0f,
         .y_vel = 0.0f,
-        .texture = texture_load(0, "../res/textures/player.png", GL_RED, GL_RG),
+        .texture = texture_load(0, "../res/images/player.png", GL_RED, GL_RG),
         .shader = shader_create("../res/shaders/texture.vert", "../res/shaders/texture.frag"),
         .collider = collider_setup(player.vertices, false),
-        .explosion_texture = texture_load(0, "../res/textures/explosion.png", GL_RGBA, GL_RGBA),
+        .explosion_texture = texture_load(0, "../res/images/explosion.png", GL_RGBA, GL_RGBA),
         .explosion_shader = shader_create("../res/shaders/texture_rgba.vert", "../res/shaders/texture_rgba.frag"), 
         .width = 48,
         .height = 46,
@@ -154,7 +154,7 @@ void player_init(void) {
         .vbo = buffer_create(GL_ARRAY_BUFFER, true),
         .score = 0,
 
-        .bullet_texture = texture_load(1, "../res/textures/bullet.png", GL_RED, GL_RGB),
+        .bullet_texture = texture_load(1, "../res/images/bullet.png", GL_RED, GL_RGB),
         .bullet_shader = shader_create("../res/shaders/texture.vert", "../res/shaders/texture.frag"),
         .bullet_head = NULL,
         .bullet_on_cooldown = false,
@@ -185,7 +185,7 @@ void player_init(void) {
    vao_attr(0, 4, GL_FLOAT, 4*sizeof(float), 0);
 
    buffer_bind(player.ibo);
-    unsigned int indices[] = { 0, 1, 2, 2, 3, 0 };
+   unsigned int indices[] = { 0, 1, 2, 2, 3, 0 };
    buffer_data(player.ibo, sizeof(indices), indices);
 
    vao_unbind();

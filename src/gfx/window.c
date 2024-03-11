@@ -4,10 +4,15 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define TARGET_FPS 1.0f/60.0f
+
 struct Window window;
 
 void window_create(func setup, func render, func update, func input) {
-    glfwInit();
+    if (!glfwInit()) {
+        fprintf(stderr, "Failed to initialize GLFW\n");
+        exit(EXIT_FAILURE);
+    }
 
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -19,14 +24,18 @@ void window_create(func setup, func render, func update, func input) {
     window.render = render;
     window.update = update;
     window.input  = input;
-    assert(window.window != NULL);
+    if (window.window == NULL) {
+        fprintf(stderr, "Failed to create GLFW window\n");
+        exit(EXIT_FAILURE);
+    }
 
     glfwGetWindowSize(window.window, &window.width, &window.height);
     glfwMakeContextCurrent(window.window);
     glfwSwapInterval(1);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        abort();
+        fprintf(stderr, "Failed to initialize GLAD\n");
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -39,7 +48,7 @@ void _update(void) {
     window.update();
 }
 
-void window_loop() {
+void window_loop(void) {
     glViewport(0,0,window.width, window.height);
 
     mat4 proj = GLM_MAT4_IDENTITY_INIT;
@@ -48,7 +57,7 @@ void window_loop() {
     window.setup();
     window.last_time = glfwGetTime();
     window.fps = 0.0f;
-    static float a;
+    float accumulator = 0.0f;
     static char buffer[42];
 
     while (!glfwWindowShouldClose(window.window)) {
@@ -56,20 +65,21 @@ void window_loop() {
         window.delta_time = (window.current_time - window.last_time); 
         window.last_time = window.current_time;
         
-        window.input();
-
-        a += window.delta_time;
-        if (a > 1.0f) {
-            snprintf(buffer, 42, "OpenGL Shooter | FPS %.2f (%.2fms)", window.fps, 1000.0f/window.fps);
+        accumulator += window.delta_time;
+        if (accumulator >= 1.0f) {
+            snprintf(buffer, 42, "OpenGL Shooter | FPS %.1f (%.2fms)", window.fps, 1000.0f/window.fps);
             glfwSetWindowTitle(window.window, buffer);
+
             window.fps = 0.0f;
-            a--;
+            accumulator = 0.0f;
         }
 
+        window.input();
         _update();
         _render();
-        glfwSwapBuffers(window.window);
+
         glfwPollEvents();
+        glfwSwapBuffers(window.window);
     }
 }
 

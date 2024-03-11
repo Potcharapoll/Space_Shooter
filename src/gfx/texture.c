@@ -2,25 +2,29 @@
 #include "texture.h"
 #include "stb_image.h"
 
-#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct Texture texture_load(int unit, char *path, GLenum internal_format, GLenum source_format) {
     struct Texture texture = { .unit = unit };
 
     stbi_set_flip_vertically_on_load(1);
-    int width, height, bbp;
+    int width = 0, height = 0, bbp = 0;
     unsigned char *pixels = stbi_load(path, &width, &height, &bbp, 0);
-    assert(pixels != NULL);
+    if (pixels == NULL) {
+        fprintf(stderr, "%s: %s\n", path, stbi_failure_reason());
+        exit(EXIT_FAILURE);
+    }
 
     glGenTextures(1, &texture.handle);
     glBindTexture(GL_TEXTURE_2D, texture.handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, source_format, GL_UNSIGNED_BYTE, pixels);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, source_format, GL_UNSIGNED_BYTE, pixels);
     glBindTexture(GL_TEXTURE_2D, 0);
     stbi_image_free(pixels);
     return texture;

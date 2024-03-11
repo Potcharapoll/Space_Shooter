@@ -1,0 +1,3 @@
+build/*
+.ccls*
+compile_commands.json
