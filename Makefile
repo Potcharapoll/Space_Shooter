@@ -1,6 +1,6 @@
 CC      = gcc
-CFLAGS  = -std=c11 -O3 -Wall -Wextra -Wpedantic -g -Wstrict-aliasing
-CFLAGS += -Wno-unused-parameter -Wno-missing-field-initializer
+CFLAGS  = -std=c11 -O3 -Wall -Wextra -Wpedantic -g -Wstrict-aliasing -Wpointer-arith
+CFLAGS += -Wno-unused-parameter -Wno-missing-field-initializers -Wno-unused-result
 
 LD      = gcc
 LDFLAGS = lib/glad/src/glad.o lib/cglm/build/libcglm.a lib/glfw/build/src/libglfw3.a -lm
@@ -10,7 +10,7 @@ OBJ     = $(SRC:.c=.o)
 INCLUDE = -Ilib/cglm/include -Ilib/glad/include -Ilib/glfw/include -Ilib/stb
 BIN     = bin
 
-.PHONY: all clean
+.PHONY: all clean clean-lib
 
 all: dirs libs game
 
@@ -30,6 +30,9 @@ game: $(OBJ)
 
 run: all
 	$(BIN)/game
+
+clean-lib:
+	rm -rf lib/cglm/build lib/glfw/build
 
 clean:
 	rm -rf $(OBJ) $(BIN) lib/glad/src/glad.o
