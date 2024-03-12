@@ -1,16 +1,13 @@
 #define STB_IMAGE_IMPLEMENTATION
-#include "texture.h"
 #include "stb_image.h"
+#include "texture.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
-struct Texture texture_load(int unit, char *path, GLenum internal_format, GLenum source_format) {
+struct Texture texture_load(s32 unit, char *path, GLenum internal_format, GLenum source_format) {
     struct Texture texture = { .unit = unit };
 
     stbi_set_flip_vertically_on_load(1);
-    int width = 0, height = 0, bbp = 0;
-    unsigned char *pixels = stbi_load(path, &width, &height, &bbp, 0);
+    s32 width = 0, height = 0, bbp = 0;
+    u8 *pixels = stbi_load(path, &width, &height, &bbp, 0);
     if (pixels == NULL) {
         fprintf(stderr, "%s: %s\n", path, stbi_failure_reason());
         exit(EXIT_FAILURE);

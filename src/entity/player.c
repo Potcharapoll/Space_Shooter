@@ -5,9 +5,6 @@
 #include "../gfx/window.h"
 #include "../gfx/vertex.h"
 
-#include <cglm/cglm.h>
-#include <math.h>
-
 struct EntityPlayer player;
 
 static void _bullet_destroy(struct EntityBullet **head) {
@@ -64,12 +61,12 @@ static void bullet_update(struct EntityBullet *head) {
 
         if (head == NULL) break;
 
-        if (head->x > window.width) {
+        if (head->x > window.size[0]) {
             _bullet_destroy(&head);
             continue;
         }
 
-        head->x += 1.0f;
+        head->x += 5.0f;
         vertex_set_vec2_pos(&head->vertices[0], head->x, head->y, head->w, head->h);
 
         buffer_bind(head->vbo);
@@ -79,7 +76,7 @@ static void bullet_update(struct EntityBullet *head) {
     }
 }
 
-void bullet_new(float x, float y, float w, float h) {
+static void bullet_new(f32 x, f32 y, f32 w, f32 h) {
     struct EntityBullet *new_bullet = malloc(sizeof(*new_bullet));
     new_bullet->vao = vao_create();
     new_bullet->vbo = buffer_create(GL_ARRAY_BUFFER, true);
@@ -101,7 +98,7 @@ void bullet_new(float x, float y, float w, float h) {
     vao_attr(1, 2, GL_FLOAT, sizeof(struct Vertex), offsetof(struct Vertex, tex));
 
     buffer_bind(new_bullet->ibo);
-    unsigned int indices[] = {0,1,2,2,3,0};
+    u32 indices[] = {0,1,2,2,3,0};
     buffer_data(new_bullet->ibo, sizeof(indices), indices);
 
     vao_unbind();
@@ -121,7 +118,7 @@ void bullet_new(float x, float y, float w, float h) {
     curr->next = new_bullet;
 }
 
-void bullet_render(struct EntityBullet *head) {
+static void bullet_render(struct EntityBullet *head) {
     if (player.current_spawn_bullet <= 0) return;
 
     texture_bind(player.bullet_texture);
@@ -147,8 +144,6 @@ void player_init(void) {
         .collider = collider_setup(player.vertices, false),
         .explosion_texture = texture_load(0, "../res/images/explosion.png", GL_RGBA, GL_RGBA),
         .explosion_shader = shader_create("../res/shaders/texture_rgba.vert", "../res/shaders/texture_rgba.frag"), 
-        .width = 48,
-        .height = 46,
         .vao = vao_create(),
         .ibo = buffer_create(GL_ELEMENT_ARRAY_BUFFER, false),
         .vbo = buffer_create(GL_ARRAY_BUFFER, true),
@@ -158,24 +153,24 @@ void player_init(void) {
         .bullet_shader = shader_create("../res/shaders/texture.vert", "../res/shaders/texture.frag"),
         .bullet_head = NULL,
         .bullet_on_cooldown = false,
-        .b_w = 26,
-        .b_h = 9,        
         .bullet_delay = 0.55f,
    };
+   glm_ivec2_copy((ivec2){48,46}, player.size);
+   glm_ivec2_copy((ivec2){26,9}, player.bullet_size);
 
    shader_bind(player.shader); 
-   glUniform1i(glGetUniformLocation(player.shader.handle, "tex"), player.texture.unit);
-   glUniformMatrix4fv(glGetUniformLocation(player.shader.handle ,"proj"), 1, GL_FALSE,  (const float*)state.proj);
+   shader_uniform_texture(player.shader, player.texture);
+   shader_uniform_proj(player.shader);
    shader_unbind();
    
    shader_bind(player.explosion_shader); 
-   glUniform1i(glGetUniformLocation(player.explosion_shader.handle, "tex"), player.explosion_texture.unit);
-   glUniformMatrix4fv(glGetUniformLocation(player.explosion_shader.handle ,"proj"), 1, GL_FALSE,  (const float*)state.proj);
+   shader_uniform_texture(player.explosion_shader, player.explosion_texture);
+   shader_uniform_proj(player.explosion_shader);
    shader_unbind();
 
    shader_bind(player.bullet_shader);
-   glUniform1i(glGetUniformLocation(player.bullet_shader.handle, "tex"), player.bullet_texture.unit);
-   glUniformMatrix4fv(glGetUniformLocation(player.bullet_shader.handle ,"proj"), 1, GL_FALSE,  (const float*)state.proj);
+   shader_uniform_texture(player.bullet_shader, player.bullet_texture);
+   shader_uniform_proj(player.bullet_shader);
    shader_unbind();
 
    vao_bind(player.vao);
@@ -185,7 +180,7 @@ void player_init(void) {
    vao_attr(0, 4, GL_FLOAT, 4*sizeof(float), 0);
 
    buffer_bind(player.ibo);
-   unsigned int indices[] = { 0, 1, 2, 2, 3, 0 };
+   u32 indices[] = { 0, 1, 2, 2, 3, 0 };
    buffer_data(player.ibo, sizeof(indices), indices);
 
    vao_unbind();
@@ -209,6 +204,9 @@ void player_input(void) {
 }
 
 void player_destroy(void) {
+    texture_delete(player.bullet_texture);
+    shader_delete(player.bullet_shader);
+
     if (player.bullet_head) {
         while (player.bullet_head != NULL) {
             struct EntityBullet *curr = player.bullet_head;
@@ -216,8 +214,9 @@ void player_destroy(void) {
             free(curr);
         }
     }
-    texture_delete(player.bullet_texture);
-    shader_delete(player.bullet_shader);
+
+    texture_delete(player.explosion_texture);
+    shader_delete(player.explosion_shader);
 
     texture_delete(player.texture);
     shader_delete(player.shader);
@@ -247,11 +246,11 @@ void player_update(void) {
         player.y = 0;
     }
 
-    if (player.y+player.height > window.height) {
-        player.y = window.height - player.height;
+    if (player.y+player.size[1] > window.size[1]) {
+        player.y = window.size[1] - player.size[1];
     }
 
-    vertex_set_vec2_pos(player.vertices, player.x, player.y, player.width, player.height);
+    vertex_set_vec2_pos(player.vertices, player.x, player.y, player.size[0], player.size[1]);
 
     buffer_bind(player.vbo);
     glBufferSubData(player.vbo.type, 0, sizeof(player.vertices), player.vertices);
@@ -270,7 +269,7 @@ void player_shoot(void) {
     }
     
     if (!player.bullet_on_cooldown) {
-        bullet_new(player.x+player.width+5.0f, player.y+player.height/2.0-5.0f, player.b_w, player.b_h); 
+        bullet_new(player.x+player.size[0]+5.0f, player.y+player.size[1]/2.0-5.0f, player.bullet_size[0], player.bullet_size[1]); 
         player.bullet_on_cooldown = true;
     }
 

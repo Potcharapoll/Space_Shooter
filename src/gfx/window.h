@@ -1,18 +1,16 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 #include "gfx.h"
-
-#define FPS 60
+#include "../util/util.h"
 
 typedef void (*func)(void);
 
 struct Window {
     GLFWwindow *window;
-    int width, height;
+    ivec2 size;
 
     func setup, render, update, input;
-    double last_time, current_time, delta_time;
-    double fps;
+    f32 delta_time;
 };
 
 void window_create(func setup, func update, func render, func input);

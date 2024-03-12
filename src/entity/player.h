@@ -15,7 +15,7 @@ struct EntityBullet {
     struct Vertex vertices[4];
     struct Collider collider;
 
-    float x, y, w, h;
+    f32 x, y, w, h;
     struct EntityBullet *next, *prev;
 };
 
@@ -28,16 +28,16 @@ struct EntityPlayer {
     struct Texture explosion_texture;
     struct Vertex vertices[4];
     struct Collider collider;
-    float x, y, y_vel;
-    int width, height;
-    int score;
+    f32 x, y, y_vel;
+    ivec2 size;
+    u32 score;
     
     struct Shader bullet_shader;
     struct Texture bullet_texture;
     struct EntityBullet *bullet_head;
-    float b_w, b_h;
-    int current_spawn_bullet;
-    double bullet_delay;
+    ivec2 bullet_size;
+    u32 current_spawn_bullet;
+    f32 bullet_delay;
     bool bullet_on_cooldown;
 };
 

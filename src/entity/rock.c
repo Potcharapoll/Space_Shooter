@@ -3,8 +3,6 @@
 #include "../state.h"
 #include "../gfx/window.h"
 
-#include <stdlib.h>
-
 struct EntityRock rock;
 
 static void _rock_new(void) {
@@ -14,11 +12,10 @@ static void _rock_new(void) {
     new_rock->ibo = buffer_create(GL_ELEMENT_ARRAY_BUFFER, false);
 
     srand(glfwGetTime()*rand());
-    new_rock->y = rand() % (int)(window.height-rock.h);
-    new_rock->x = window.width;
-    new_rock->w = rock.w;
-    new_rock->h = rock.h;
-    /* new_rock->x_vel = ((float)rand()/(float)(RAND_MAX)) * 2.5f; */
+    new_rock->x = window.size[0];
+    new_rock->y = rand() % (int)(window.size[1]-rock.size[1]);
+    new_rock->w = rock.size[0];
+    new_rock->h = rock.size[1];
     new_rock->x_vel = 2.5f;
     new_rock->next = NULL;
     new_rock->prev = NULL;
@@ -32,7 +29,7 @@ static void _rock_new(void) {
     vao_attr(1, 2, GL_FLOAT, sizeof(struct Vertex), offsetof(struct Vertex, tex));
 
     buffer_bind(new_rock->ibo);
-    unsigned int indices[] = { 0,1,2,2,3,0 };
+    u32 indices[] = { 0,1,2,2,3,0 };
     buffer_data(new_rock->ibo, sizeof(indices), indices);
 
     vao_unbind();
@@ -58,18 +55,17 @@ void rock_init(void) {
     rock = (struct EntityRock) {
         .texture = texture_load(0, "../res/images/rock.png", GL_RGB, GL_RGB), 
         .shader = shader_create("../res/shaders/texture_rgba.vert", "../res/shaders/texture_rgba.frag"),
-        .w = 48,
-        .h = 46,
         .rock_head = NULL,
         .current_spawn_rock = 0,
         .spawn_delay = 0.15f,
         .do_spawn = false,
         .on_cooldown = false
     }; 
+    glm_ivec2_copy((ivec2){48,46}, rock.size);
 
    shader_bind(rock.shader);
-   glUniform1i(glGetUniformLocation(rock.shader.handle, "tex"), rock.texture.unit);
-   glUniformMatrix4fv(glGetUniformLocation(rock.shader.handle ,"proj"), 1, GL_FALSE,  (const float*)state.proj);
+   shader_uniform_texture(rock.shader, rock.texture);
+   shader_uniform_proj(rock.shader);
    shader_unbind();
 }
 
@@ -158,7 +154,7 @@ void rock_update(void) {
             return;
         }
 
-        if (curr->x+rock.w < 0) {
+        if (curr->x+rock.size[0] < 0) {
             rock_free(&curr);
             player.score++;
             continue;

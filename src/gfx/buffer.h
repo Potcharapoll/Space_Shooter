@@ -1,8 +1,7 @@
 #ifndef VBO_H
 #define VBO_H
 #include "gfx.h"
-
-#include <stdbool.h>
+#include "../util/util.h"
 
 struct Buffer {
     GLenum type;

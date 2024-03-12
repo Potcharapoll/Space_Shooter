@@ -1,11 +1,15 @@
 #include "state.h"
+#include "util/util.h"
 #include "gfx/window.h"
 #include "gfx/text.h"
 #include "entity/player.h"
 #include "entity/rock.h"
 
 struct State state;
-struct Text txt;
+
+static struct Text txt;
+static f32 timer1 = 0.0f;
+static char buffer[108];
 
 // remove later
 struct Obj {
@@ -14,8 +18,6 @@ struct Obj {
     struct Texture texture;
     struct Shader shader;
 } bg;
-
-static char buffer[108];
 
 // font.png 64x40
 // TODO:
@@ -26,7 +28,7 @@ static char buffer[108];
 //  - Game over           [PASSED]
 //  - Restart or Quit     [PASSED]
 //
-//  - Refactor            [When everything done]
+//  - Refactor            [1]
 //  - Sound               [Can't be true for now (02/10/67)]
 
 void setup(void) {
@@ -35,37 +37,37 @@ void setup(void) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glm_ortho(0, window.width, 0, window.height, 0.0f, 1.0f, state.proj);
-    txt = text_load("../res/images/font.png", 64.0f, 40.0f, 8.0f);
+    glm_ortho(0, window.size[0], 0, window.size[1], 0.0f, 1.0f, state.proj);
+    txt = text_load("../res/images/font.png", (vec2){64.0f, 40.0f}, 8.0f);
 
     bg = (struct Obj) {
         .vao = vao_create(),
-            .vbo = buffer_create(GL_ARRAY_BUFFER, false),
-            .ibo = buffer_create(GL_ELEMENT_ARRAY_BUFFER, false),
-            .shader = shader_create("../res/shaders/texture_rgba.vert", "../res/shaders/texture_rgba.frag"),
-            .texture = texture_load(0, "../res/images/background.png", GL_RGBA, GL_RGBA)
+        .vbo = buffer_create(GL_ARRAY_BUFFER, false),
+        .ibo = buffer_create(GL_ELEMENT_ARRAY_BUFFER, false),
+        .shader = shader_create("../res/shaders/texture_rgba.vert", "../res/shaders/texture_rgba.frag"),
+        .texture = texture_load(0, "../res/images/background.png", GL_RGBA, GL_RGBA)
     };
 
     float vertices[] = {
-        0.0,          0.0,              0.0, 0.0,
-        window.width, 0.0,              1.0, 0.0,
-        window.width, window.height,    1.0, 1.0,   
-        0.0,          window.height,    0.0, 1.0
+        0.0,            0.0,               0.0, 0.0,
+        window.size[0], 0.0,               1.0, 0.0,
+        window.size[0], window.size[1],    1.0, 1.0,   
+        0.0,            window.size[1],    0.0, 1.0
     };
 
-    unsigned int indices[] = {0,1,2,2,3,0};
+    u32 indices[] = {0,1,2,2,3,0};
 
     vao_bind(bg.vao);
     buffer_bind(bg.vbo);
     buffer_data(bg.vbo, sizeof(vertices), vertices);
-    vao_attr(0, 4, GL_FLOAT, 4*sizeof(float), 0);
+    vao_attr(0, 4, GL_FLOAT, 4*sizeof(f32), 0);
 
     buffer_bind(bg.ibo);
     buffer_data(bg.ibo, sizeof(indices), indices);
 
     shader_bind(bg.shader);
-    glUniform1i(glGetUniformLocation(bg.shader.handle, "tex"), bg.texture.unit);
-    glUniformMatrix4fv(glGetUniformLocation(bg.shader.handle ,"proj"), 1, GL_FALSE,  (const float*)state.proj);
+    shader_uniform_texture(bg.shader, bg.texture);
+    shader_uniform_proj(bg.shader);
     shader_unbind();
     vao_unbind();
     buffer_unbind(bg.vbo);
@@ -94,25 +96,37 @@ void render(void) {
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     if (state.state == MENU) {
-        text_render(txt, "SPACE SHOOTER", (window.width - (8.0*10.0*13.0))/2, window.height - 250.0f, 10.0f, (vec3){1.0f, 0.5f, 1.0f});
-        text_render(txt, "PRESS SPACE TO START", (window.width - (8.0*3.0*20.0))/2, window.height - 500.0f, 3.0f, (vec3){1.0f, 1.0f, 1.0f});
+
+        text_render(txt, "SPACE SHOOTER", (vec2){(window.size[0] - (8.0*10.0*13.0))/2, window.size[1] - 250.0f},
+                10.0f, (vec3){0.4f, 0.4f, 1.0f});
+
+        text_blink_render(txt, "PRESS SPACE TO START", (vec2){(window.size[0] - (8.0*3.0*20.0))/2, window.size[1] - 500.0f},
+                3.0f, (vec3){1.0f, 1.0f, 1.0f}, 0.75f, &timer1);
     }
 
     if (state.state == GAMEOVER) {
-        text_render(txt, "GAME OVER", (window.width - (8.0*8.0*9.0))/2, window.height - 350.0f, 8.0f, (vec3){1.0f, 0.0f, 0.0f});
-        text_render(txt, "PRESS SPACE TO RESTART OR ESCAPE TO EXIT", (window.width - (8.0*3.0*40.0))/2, window.height - 450.0f, 3.0f, (vec3){1.0f, 1.0f, 1.0f});
+
+        text_render(txt, "GAME OVER", (vec2){(window.size[0] - (8.0*8.0*9.0))/2, window.size[1] - 350.0f},
+                8.0f, (vec3){1.0f, 0.0f, 0.0f});
+
+        text_render(txt, "PRESS SPACE TO RESTART OR ESCAPE TO EXIT", (vec2){(window.size[0] - (8.0*3.0*40.0))/2, window.size[1] - 450.0f},
+                3.0f, (vec3){1.0f, 1.0f, 1.0f});
     }
 
     if (state.state == PAUSE) {
-        text_render(txt, "PAUSE THE GAME", (window.width - (8.0*8.0*14.0))/2, window.height - 350.0f, 8.0f, (vec3){0.5f, 0.7f, 0.2f});
-        text_render(txt, "PRESS ESCAPE TO CONTINUE", (window.width - (8.0*3.0*24.0))/2, window.height - 450.0f, 3.0f, (vec3){1.0f, 1.0f, 1.0f});
+
+        text_render(txt, "PAUSE THE GAME", (vec2){(window.size[0] - (8.0*8.0*14.0))/2, window.size[1] - 350.0f},
+                8.0f, (vec3){0.5f, 0.7f, 0.2f});
+
+        text_render(txt, "PRESS ESCAPE TO CONTINUE", (vec2){(window.size[0] - (8.0*3.0*24.0))/2, window.size[1] - 450.0f},
+                3.0f, (vec3){1.0f, 1.0f, 1.0f});
     }
 
     if (state.state == INGAME) {
         player_render();
         rock_render();
-        snprintf(buffer, 108, "SCORE %u", player.score);
-        text_render(txt, buffer, 20.0f, window.height - 60.0f, 5.0f, (vec3){1.0f, 1.0f, 1.0f});
+        snprintf(buffer, sizeof(buffer), "SCORE %u", player.score);
+        text_render(txt, buffer, (vec2){20.0f, window.size[1] - 60.0f}, 5.0f, (vec3){1.0f, 1.0f, 1.0f});
 
     }
 }

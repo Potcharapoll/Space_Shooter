@@ -1,4 +1,5 @@
 #include "shader.h"
+#include "../state.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +9,7 @@
 static GLuint _compile(char *path, GLenum type) {
     FILE *f;
     char *txt;
-    long len;
+    s32 len;
 
     f = fopen(path, "rb");
     if (f == NULL) {
@@ -29,7 +30,7 @@ static GLuint _compile(char *path, GLenum type) {
     glShaderSource(shader, 1, (const char* const*)&txt, (const GLint*)&len);
     glCompileShader(shader);
     
-    int check;
+    s32 check;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &check);
     if (check == GL_FALSE) {
         char log[1024];
@@ -48,7 +49,7 @@ struct Shader shader_create(char *vs_path, char *fs_path) {
     glAttachShader(shader.handle, shader.fs);
     glLinkProgram(shader.handle);
     
-    int check;
+    s32 check;
     glGetProgramiv(shader.handle, GL_LINK_STATUS, &check);
     if (check == GL_FALSE) {
         char log[1024];
@@ -67,6 +68,30 @@ void shader_bind(struct Shader self) {
 void shader_unbind(void) {
     glUseProgram(0);
 }
+void shader_uniform_proj(struct Shader self) {
+   glUniformMatrix4fv(glGetUniformLocation(self.handle , "proj"), 1, GL_FALSE,  (const f32*)state.proj);
+}
+
+void shader_uniform_texture(struct Shader self, struct Texture tex) {
+    glUniform1i(glGetUniformLocation(self.handle, "tex"), tex.unit);
+}
+
+void shader_uniform_mat4(struct Shader self, char *name, mat4 m) {
+   glUniformMatrix4fv(glGetUniformLocation(self.handle , name), 1, GL_FALSE,  (const f32*)m);
+}
+
+void shader_uniform_vec3(struct Shader self, char *name, vec3 v) {
+    glUniform3f(glGetUniformLocation(self.handle, name), v[0], v[1], v[2]);
+}
+
+void shader_uniform_float(struct Shader self, char *name, f32 f) {
+    glUniform1f(glGetUniformLocation(self.handle, name), f); 
+}
+
+void shader_uniform_int(struct Shader self, char *name, s32 i) {
+    glUniform1i(glGetUniformLocation(self.handle, name), i); 
+}
+
 
 void shader_delete(struct Shader self) {
     glDeleteShader(self.vs);

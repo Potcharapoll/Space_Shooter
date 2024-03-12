@@ -1,9 +1,5 @@
 #include "window.h"
 
-#include <cglm/cglm.h>
-#include <stdlib.h>
-#include <assert.h>
-
 #define TARGET_FPS 1.0f/60.0f
 
 struct Window window;
@@ -29,7 +25,7 @@ void window_create(func setup, func render, func update, func input) {
         exit(EXIT_FAILURE);
     }
 
-    glfwGetWindowSize(window.window, &window.width, &window.height);
+    glfwGetWindowSize(window.window, &window.size[0], &window.size[1]);
     glfwMakeContextCurrent(window.window);
     glfwSwapInterval(1);
 
@@ -39,47 +35,51 @@ void window_create(func setup, func render, func update, func input) {
     }
 }
 
-void _render(void) {
-    window.fps++;
+static inline void _render(void) {
     window.render();
 }
 
-void _update(void) {
+static inline void _update(void) {
     window.update();
 }
 
+static inline void _process_input(void) {
+    window.input();
+}
+
 void window_loop(void) {
-    glViewport(0,0,window.width, window.height);
+    glViewport(0,0,window.size[0], window.size[1]);
 
     mat4 proj = GLM_MAT4_IDENTITY_INIT;
-    glm_ortho(0, window.width, 0, window.height, -1.0f, 1.0f, proj);
+    glm_ortho(0, window.size[0], 0, window.size[1], -1.0f, 1.0f, proj);
 
     window.setup();
-    window.last_time = glfwGetTime();
-    window.fps = 0.0f;
-    float accumulator = 0.0f;
-    static char buffer[42];
+    f32 last_time = glfwGetTime();
+    f32 current_time;
+    f32 total_time = 0.0f;
+    char buffer[42];
 
     while (!glfwWindowShouldClose(window.window)) {
-        window.current_time = glfwGetTime();
-        window.delta_time = (window.current_time - window.last_time); 
-        window.last_time = window.current_time;
-        
-        accumulator += window.delta_time;
-        if (accumulator >= 1.0f) {
-            snprintf(buffer, 42, "OpenGL Shooter | FPS %.1f (%.2fms)", window.fps, 1000.0f/window.fps);
-            glfwSetWindowTitle(window.window, buffer);
+        current_time = glfwGetTime();
+        window.delta_time = (current_time - last_time); 
+        last_time = current_time;
 
-            window.fps = 0.0f;
-            accumulator = 0.0f;
-        }
-
-        window.input();
+        _process_input();
         _update();
         _render();
 
-        glfwPollEvents();
         glfwSwapBuffers(window.window);
+        glfwPollEvents();
+
+        total_time += window.delta_time;
+
+        if (total_time >= 1.0) {
+            snprintf(buffer, sizeof(buffer), "OpenGL Shooter | FPS %.1f (%.2fms)", 
+                    1.0f/window.delta_time, window.delta_time*1000.0f);
+
+            glfwSetWindowTitle(window.window, buffer);
+            total_time = 0.0f;
+        } 
     }
 }
 

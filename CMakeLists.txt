@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.7)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_C_FLAGS "-Wall -Wextra -pedantic -g3 -std=c11 -DDEBUG")
 set(CMAKE_CXX_STANDARD 11)
 project(opengl_shooter)
 
@@ -24,4 +23,5 @@ add_executable(
     src/entity/rock.c
     src/entity/collider.c)
 
+add_compile_options(${PROJECT_NAME} PUBLIC "-std=c11 -O3 -g -Wall -Wextra -Wpedantic -Wpointer-arith -Wstrict-aliasing -Wno-unused-parameter -Wno-missing-field-initializers")
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw cglm)

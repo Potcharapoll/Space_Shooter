@@ -1,7 +1,6 @@
 #ifndef STATE_H
 #define STATE_H
-#include <stdbool.h>
-#include <cglm/cglm.h>
+#include "util/util.h"
 
 struct State {
     mat4 proj;

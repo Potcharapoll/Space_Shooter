@@ -6,6 +6,7 @@
 #include "../gfx/vao.h"
 #include "../gfx/vertex.h"
 #include "../gfx/buffer.h"
+#include "../util/types.h"
 #include "collider.h"
 
 struct Rock {
@@ -13,8 +14,8 @@ struct Rock {
     struct Buffer ibo, vbo;
     struct Vertex vertices[4];
     struct Collider collider;
-    float x, y, w, h;
-    float x_vel;
+    f32 x, y, w, h;
+    f32 x_vel;
 
     struct Rock *next, *prev;
 };
@@ -22,12 +23,12 @@ struct Rock {
 struct EntityRock {
     struct Shader shader;
     struct Texture texture;
-    float w, h;
+    ivec2 size;
 
     int current_spawn_rock;
     struct Rock *rock_head;
     bool do_spawn, on_cooldown;
-    float spawn_delay;
+    f32 spawn_delay;
 };
 
 void rock_init(void);

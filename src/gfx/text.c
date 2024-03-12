@@ -1,12 +1,8 @@
 #include "text.h"
+#include "window.h"
 #include "../state.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
-struct Text text_load(char *path, float width, float height, float char_width) {
+struct Text text_load(char *path, vec2 size, float char_width) {
     struct Text txt = {
         .vao = vao_create(),
         .vbo = buffer_create(GL_ARRAY_BUFFER, false),
@@ -14,9 +10,8 @@ struct Text text_load(char *path, float width, float height, float char_width) {
         .shader = shader_create("../res/shaders/text.vert", "../res/shaders/text.frag"),
         .font_texture = texture_load(0, path, GL_RED, GL_RGBA),
         .char_width = char_width,
-        .width = width,
-        .height = height,
     };
+    glm_vec2_copy(size, txt.size);
     unsigned int indices[] = { 0,1,2,2,3,0 };
 
     vao_bind(txt.vao);
@@ -28,36 +23,34 @@ struct Text text_load(char *path, float width, float height, float char_width) {
     buffer_data(txt.ibo, sizeof(indices), indices);
 
     shader_bind(txt.shader);
-
-    glUniformMatrix4fv(glGetUniformLocation(txt.shader.handle ,"proj"), 1, GL_FALSE,  (const float*)state.proj);
-    glUniform1f(glGetUniformLocation(txt.shader.handle, "width"), txt.width);
-    glUniform1f(glGetUniformLocation(txt.shader.handle, "height"), txt.height);
-    glUniform1i(glGetUniformLocation(txt.shader.handle, "text"), txt.font_texture.unit);
+    shader_uniform_proj(txt.shader);
+    shader_uniform_float(txt.shader, "width", txt.size[0]);
+    shader_uniform_float(txt.shader, "height", txt.size[1]);
+    shader_uniform_texture(txt.shader, txt.font_texture);
+    shader_unbind();
 
     vao_unbind();
     buffer_unbind(txt.vbo);
     buffer_unbind(txt.ibo);
-    shader_unbind();
     return txt;
 }
 
-void text_render(struct Text self, const char *text, float x, float y, float scale, vec3 text_color) {
+void text_render(struct Text self, const char *text, vec2 position, f32 scale, vec3 text_color) {
     
-    float offset_x, offset_y;
-    float char_width = self.char_width;
+    f32 offset_x, offset_y;
+    f32 char_width = self.char_width;
 
-    float xpos = x;
-    float ypos = y;
+    f32 xpos = position[0];
+    f32 ypos = position[1];
 
-    float w = self.char_width*scale;
-    float h = self.char_width*scale;
+    f32 w = self.char_width*scale;
+    f32 h = self.char_width*scale;
 
-    int rows    = 0; 
-    int columns = 0;
+    s32 rows    = 0; 
+    s32 columns = 0;
 
     shader_bind(self.shader);
-    glUniform3f(glGetUniformLocation(self.shader.handle, "text_color"), text_color[0], text_color[1], text_color[2]);
-
+    shader_uniform_vec3(self.shader, "text_color", text_color);
     texture_bind(self.font_texture);
     vao_bind(self.vao);
 
@@ -85,9 +78,9 @@ void text_render(struct Text self, const char *text, float x, float y, float sca
         }
 
         offset_x = char_width*rows;
-        offset_y = self.height - char_width - (char_width*columns);
+        offset_y = self.size[1] - char_width - (char_width*columns);
 
-        float vertices[] = {
+        f32 vertices[] = {
             xpos,     ypos,         offset_x,              offset_y,
             xpos + w, ypos,         offset_x + char_width, offset_y,
             xpos + w, ypos + h,     offset_x + char_width, offset_y + char_width,
@@ -103,6 +96,16 @@ void text_render(struct Text self, const char *text, float x, float y, float sca
     } 
     vao_unbind();
     texture_unbind();
+}
+
+void text_blink_render(struct Text self, const char *text, vec2 position, f32 scale, vec3 text_color, f32 time, f32 *timer) {
+    *timer += window.delta_time;
+    if (*timer > 0.0f && *timer < time) {
+        text_render(self, text, position, scale, text_color);
+    }
+    else if (*timer > time) {
+        *timer = -fabsf(*timer);
+    }  
 }
 
 void text_destroy(struct Text self) {
